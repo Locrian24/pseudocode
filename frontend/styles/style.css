@@ -71,6 +71,7 @@ span {
 
 .input {
     margin: 0.2rem 0;
+    padding-left: 1rem;
     background: transparent;
     border: none;
     color: transparent;
@@ -180,7 +181,7 @@ span {
         font-size: 5vw;
     }
 
-    .subtitle, p, .input, pre {
+    .subtitle, p, .input, pre, .program {
         font-size: 3vw;
     }
 
@@ -189,8 +190,8 @@ span {
     }
 }
 
-@media screen and (min-width: 641px) and (max-width: 1007px) {
+/* @media screen and (min-width: 641px) and (max-width: 1007px) {
     .title {
         font-size: 100px;
     }
-}
+} */
