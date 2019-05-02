@@ -16,16 +16,27 @@ app.use(morgan('combined'));
 //Initial search for pages
 app.get('/:initialsearch', (req, res) => {
     let search = req.params.initialsearch;
-    var wiki_pages;
+
+    res.write(`<p class="update">Querying Wiki's API...</p>`);
 
     axios
-        .get(`https://en.wikipedia.org/w/api.php?action=query&format=json&prop=&list=search&srsearch=${search}&srinfo=totalhits&srprop=snippet`)
+        .get(`https://en.wikipedia.org/w/api.php?action=query&origin=*&format=json&list=search&srprop&srsearch=${search}&srinfo=totalhits`)
         .then((response) => {
-            wiki_pages = [response.data.query.searchinfo.totalhits, response.data.query.search];
-            res.send(wiki_pages);
+            res.write(`<p class="program">Showing top 6 of ${response.data.query.searchinfo.totalhits} results:</p>`);
+
+            let search_results = response.data.query.search;
+            res.write(`<div class="result-grid">`);
+            for (let i = 0; i < 6; i++) {
+                let pageid = search_results[i]["pageid"];
+                let page_title = search_results[i]["title"];
+                res.write(`<p id="${pageid}">${page_title}</p>`);
+            }
+            res.write(`</div>`);
+            res.end();
         })
         .catch((error) => {
-            res.send(error);
+            res.write(error);
+            res.end();
         });
 });
 

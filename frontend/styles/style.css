@@ -71,7 +71,7 @@ span {
 
 .input {
     margin: 0.2rem 0;
-    padding-left: 1rem;
+    padding-left: 0.5rem;
     background: transparent;
     border: none;
     color: transparent;
@@ -81,6 +81,10 @@ span {
     position: relative;
     display: inline-block;
     line-height: 1.5em;
+}
+
+.input:hover {
+    cursor: pointer;
 }
 
 .input::after {
