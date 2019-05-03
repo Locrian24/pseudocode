@@ -29,9 +29,10 @@ app.get('/:initialsearch', (req, res) => {
             for (let i = 0; i < 6; i++) {
                 let pageid = search_results[i]["pageid"];
                 let page_title = search_results[i]["title"];
-                res.write(`<p id="${pageid}">${page_title}</p>`);
+                res.write(`<p class="result-link" id="${pageid}">${page_title}</p>`);
             }
             res.write(`</div>`);
+            res.write(`<p class="program">Click on the desired page to be parsed...</p>`);
             res.end();
         })
         .catch((error) => {
@@ -44,24 +45,50 @@ app.get('/:initialsearch', (req, res) => {
 app.get('/pageid/:id', (req, res) => {
     let id = req.params.id;
 
+    res.write(`<p class="update">Fetching page content...</p>`);
+
     axios
         .get(`https://en.wikipedia.org/w/api.php?action=parse&format=json&origin=*&pageid=${id}&prop=displaytitle%7Ctext`)
         .then((response) => {
-            let html = response.data.parse.text;
-            let stringify = JSON.stringify(html);
-            
-            let code_frags = stringify.match(/<pre>(.*?)<\/pre>/gm);
-            let page = [response.data.parse.displaytitle, code_frags];
 
-            res.send(page);
+            res.write(`<p class="update">Extracting pseudocode fragments...</p>`);
+
+            let html = response.data.parse.text;
+            let code_frags = extractPre(html);
+            if (code_frags.length == 0) {
+                res.write(`<p class="program">No pseudocode found for ${response.data.parse.displaytitle}! Press R to restart</p>`);
+                res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
+                res.end();
+            }
+
+            res.write(`<p class="program">First pseudocode fragment for ${response.data.parse.displaytitle}:</p>`);
+
+            let parsed_frag = code_frags[0].replace(/\\n/g, '\<br \/\>');
+            res.write(`<div id="0" class="result">`);
+            res.write(parsed_frag);
+            res.write(`</div>`);
+
+            res.write(`<p class="program">(C = copy to clipboard, N = next fragment, R = restart)</p>`);
+            res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
+
+            res.end();
         })
         .catch((error) => {
-            res.send(error);
+            res.write(error);
+            res.end();
         });
 })
 
-
-
+//Local server start
 app.listen(PORT, () => {
     console.log(`App is listening on ${PORT}`);
 });
+
+/**
+ * Extracts all <pre> sections from a page's html
+ * @param {String} page_html 
+ */
+function extractPre(page_html) {
+    let stringify = JSON.stringify(page_html);
+    return stringify.match(/<pre>(.*?)<\/pre>/gm);
+}
