@@ -136,6 +136,12 @@ span {
     clear: left;
 }
 
+.error {
+    color: rgb(206, 100, 100);
+    float: left;
+    clear: left;
+}
+
 .result {
     color: #DD56E2;
     float: left;

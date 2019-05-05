@@ -20,9 +20,11 @@ window.addEventListener("keydown", (event) => {
          }
 
         if (focussed.id === "alg-input") {
+            //remove identifier so that we don't refocus the wrong element
+            focussed.removeAttribute("id");
+
             fetch(`http://localhost:8081/${focussed.textContent}`)
             .then(res => {
-
                 //handle streamed responses, appending to root element
                 handleStream(res, root);
                 
@@ -31,7 +33,30 @@ window.addEventListener("keydown", (event) => {
                 console.log(`Cannot access server: ${err}`);
             });
         } else if (focussed.id === "key-input") {
+            //remove identifier so that we don't refocus the wrong element
+            focussed.removeAttribute("id");
             //TODO Manage key options here
+            let option = focussed.textContent;
+            switch(option.toUpperCase()) {
+                case "R":
+                    while(root.firstChild) {
+                        root.removeChild(root.firstChild);
+                    }
+
+                    root.insertAdjacentHTML('beforeend', '<div class="program">./pseudocode_fetcher ><div id="alg-input" class="input alg-input" contenteditable="true"></div></div>');
+                    document.getElementById('alg-input').focus();
+                    document.addEventListener('click', clickEventHandler);
+                    
+                    break;
+                case "C": //copy to clipboard
+
+                    break;
+                case "N": //next code fragment
+
+                    break;
+                default: //not a valid input error
+                    break;
+            }
         }
     }
 }, false);
@@ -40,11 +65,13 @@ window.addEventListener("keydown", (event) => {
  * Fetches code fragments from chosen Wiki page
  * Must only be called from page link
  */
-document.addEventListener('click', function handler(ele) {
+document.addEventListener('click', clickEventHandler);
+
+function clickEventHandler(ele) {
     if (ele.target.className === "result-link") {
-        document.removeEventListener('click', handler);
+        document.removeEventListener('click', clickEventHandler);
         
-        fetch(`http://localhost:8081/pageid/${ele.target.id}`)
+        fetch(`http://localhost:8081/parse/${ele.target.id}/0`)
             .then(res => {
                 handleStream(res, root);
             })
@@ -52,7 +79,7 @@ document.addEventListener('click', function handler(ele) {
                 console.log(`Cannot access server: ${err}`);
             })
     }
-});
+}
 
 /**
  * Converts string into DOM Elements using the template tag (HTML5)
@@ -83,7 +110,9 @@ function handleStream(response, root) {
             elements.forEach(child => {
                 root.appendChild(child);
                 child.scrollIntoView();
-                child.focus();
+                if (document.querySelector("#key-input")) {
+                    document.getElementById("key-input").focus();
+                }
             })
 
             read();

@@ -13,7 +13,10 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(morgan('combined'));
 
-//Initial search for pages
+
+/**
+ * Initial search for pages
+ */
 app.get('/:initialsearch', (req, res) => {
     let search = req.params.initialsearch;
 
@@ -32,18 +35,21 @@ app.get('/:initialsearch', (req, res) => {
                 res.write(`<p class="result-link" id="${pageid}">${page_title}</p>`);
             }
             res.write(`</div>`);
-            res.write(`<p class="program">Click on the desired page to be parsed...</p>`);
-            res.end();
+            res.write(`<p class="program">Click on the desired page...</p>`);
+            res.status(404).end();
         })
         .catch((error) => {
-            res.write(error);
-            res.end();
+            res.write(`<p class="error">${error}</p>`);
+            res.status(500).end();
         });
 });
 
-//Pulls all code frags from specific page
-app.get('/pageid/:id', (req, res) => {
+/**
+ * Pulls all code frags from specific page
+ */
+app.get('/parse/:id/:fragnum', (req, res, next) => {
     let id = req.params.id;
+    let frag_num = parseInt(req.params.fragnum);
 
     res.write(`<p class="update">Fetching page content...</p>`);
 
@@ -53,17 +59,34 @@ app.get('/pageid/:id', (req, res) => {
 
             res.write(`<p class="update">Extracting pseudocode fragments...</p>`);
 
+            //Extracting all <pre> groups from page html
             let html = response.data.parse.text;
             let code_frags = extractPre(html);
-            if (code_frags.length == 0) {
-                res.write(`<p class="program">No pseudocode found for ${response.data.parse.displaytitle}! Press R to restart</p>`);
+
+            if (!code_frags) {
+                //No <pre> tags found
+                res.write(`<p class="error">No pseudocode found for ${response.data.parse.displaytitle}! Press R to restart</p>`);
                 res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
-                res.end();
+                res.status(404).end();
+                return next();
             }
 
-            res.write(`<p class="program">First pseudocode fragment for ${response.data.parse.displaytitle}:</p>`);
+            //Specific <pre> group wanted
+            let parsed_frag = code_frags[frag_num];
 
-            let parsed_frag = code_frags[0].replace(/\\n/g, '\<br \/\>');
+            if (!parsed_frag) {
+                //No more <pre> tags
+                //TODO Add better functionality than having to restart (go back to previous?)
+                res.write('<p class="error">Cannot find another fragment in the document. Please restart to try again (R)</p>');
+                res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
+                res.status(404).end();
+                return next();
+            }
+
+            //<pre> section found and can now be returned through stream
+            parsed_frag = parsed_frag.replace(/\\n/g, '<br />');
+
+            res.write(`<p class="program">Fragment ${frag_num + 1} for ${response.data.parse.displaytitle}:</p>`);
             res.write(`<div id="0" class="result">`);
             res.write(parsed_frag);
             res.write(`</div>`);
@@ -71,13 +94,13 @@ app.get('/pageid/:id', (req, res) => {
             res.write(`<p class="program">(C = copy to clipboard, N = next fragment, R = restart)</p>`);
             res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
 
-            res.end();
+            res.status(200).end();
         })
         .catch((error) => {
-            res.write(error);
-            res.end();
+            res.write(`<p class="error">${error}</p>`);
+            res.status(500).end();
         });
-})
+});
 
 //Local server start
 app.listen(PORT, () => {
