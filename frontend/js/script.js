@@ -37,7 +37,9 @@ window.addEventListener("keydown", (event) => {
                 return;
             }
 
-            fetch(`http://localhost:8081/${input}`)
+            appendToDom(`<p class="update">&#8594; Querying Wiki's API...</p>`);
+
+            fetch(`https://backend.locrian24.now.sh/${input}`)
             .then(res => {
                 //handle streamed responses, appending to root element
                 handleStream(res, root);
@@ -46,6 +48,7 @@ window.addEventListener("keydown", (event) => {
             .catch((err) => {
                 console.log(`Cannot access server: ${err}`);
             });
+
         } else if (focussed.id === "key-input") {
             //remove identifier so that we don't refocus the wrong element
             focussed.removeAttribute("id");
@@ -58,6 +61,7 @@ window.addEventListener("keydown", (event) => {
             }
 
             input = input.toLowerCase();
+            
             if (input === "clear")  {
                 resetElement(root);
             } 
@@ -71,7 +75,8 @@ window.addEventListener("keydown", (event) => {
                 current_frag.className = "result";
 
                 let current_pageid = document.querySelector('.current_id').id;
-                fetch(`http://localhost:8081/parse/${current_pageid}/${current_frag_num+1}`)
+                appendToDom(`<p class="update">&#8594; Fetching page content...</p>`);
+                fetch(`https://backend.locrian24.now.sh/parse/${current_pageid}/${current_frag_num+1}`)
                     .then(res => {
                         handleStream(res, root);
                     })
@@ -111,7 +116,9 @@ function clickEventHandler(ele) {
 
         let streamed_res = '';
 
-        fetch(`http://localhost:8081/parse/${ele.target.id}/0`)
+        appendToDom(`<p class="update">&#8594; Fetching page content...</p>`);
+
+        fetch(`https://backend.locrian24.now.sh/parse/${ele.target.id}/0`)
             .then(res => {
                 handleStream(res, root, streamed_res);
             })

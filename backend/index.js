@@ -13,15 +13,18 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(morgan('combined'));
 
-
+app.get('/', (req, res) =>{
+    res.status(200).send(`
+        <h1>Hello there, this is my backend!</h1>
+    `);
+})
 /**
  * Initial search for pages
  */
 app.get('/:initialsearch', (req, res, next) => {
     let search = req.params.initialsearch;
 
-    res.write(`<p class="update">&#8594; Querying Wiki's API...</p>`);
-    res.write(`DEL`);
+    res.set('Content-Type', 'text/html');
 
     axios
         .get(`https://en.wikipedia.org/w/api.php?action=query&origin=*&format=json&list=search&srprop&srsearch=${search}&srinfo=totalhits`)
@@ -57,14 +60,13 @@ app.get('/:initialsearch', (req, res, next) => {
 });
 
 /**
- * Pulls all code frags from specific page
+ * Pulls all code frags from specific Wiki page
  */
 app.get('/parse/:id/:fragnum', (req, res, next) => {
     let id = req.params.id;
     let frag_num = parseInt(req.params.fragnum);
 
-    res.write(`<p class="update">&#8594; Fetching page content...</p>`);
-    res.write(`DEL`);
+    res.set('Content-Type', 'text/html');
 
     axios
         .get(`https://en.wikipedia.org/w/api.php?action=parse&format=json&origin=*&pageid=${id}&prop=displaytitle%7Ctext`)
@@ -112,11 +114,6 @@ app.get('/parse/:id/:fragnum', (req, res, next) => {
         });
 });
 
-//Local server start
-app.listen(PORT, () => {
-    console.log(`App is listening on ${PORT}`);
-});
-
 /**
  * Extracts all <pre> sections from a page's html
  * @param {String} page_html 
@@ -125,3 +122,6 @@ function extractPre(page_html) {
     let stringify = JSON.stringify(page_html);
     return stringify.match(/<pre>(.*?)<\/pre>/gm);
 }
+
+module.exports = app;
+
