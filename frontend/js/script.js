@@ -9,21 +9,35 @@ window.addEventListener("keydown", (event) => {
     if (event.keyCode == 13) {
         let id = document.activeElement.id;
         let focussed = document.getElementById(id);
-        var root = document.getElementById("root");
+        const root = document.getElementById("root");
 
         try {
             focussed.contentEditable = false;
             focussed.classList.add('no-after');
-         } catch (err) {
-             console.log(err);
-             return;
-         }
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+
+        var input = focussed.textContent;
 
         if (focussed.id === "alg-input") {
             //remove identifier so that we don't refocus the wrong element
             focussed.removeAttribute("id");
 
-            fetch(`http://localhost:8081/${focussed.textContent}`)
+            if (input === "clear") {
+                resetElement(root);
+                return;
+            } else if (input === "") {
+                appendToDom('<p class="error">Can\'t do anything with an empty query. Please try again...</p><p class="program">&#8594; Please enter an algorithm:</p><div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>');
+                
+
+                document.getElementById('alg-input').focus();
+                document.addEventListener('click', clickEventHandler);
+                return;
+            }
+
+            fetch(`http://localhost:8081/${input}`)
             .then(res => {
                 //handle streamed responses, appending to root element
                 handleStream(res, root);
@@ -35,28 +49,50 @@ window.addEventListener("keydown", (event) => {
         } else if (focussed.id === "key-input") {
             //remove identifier so that we don't refocus the wrong element
             focussed.removeAttribute("id");
-            //TODO Manage key options here
-            let option = focussed.textContent;
-            switch(option.toUpperCase()) {
-                case "R":
-                    while(root.firstChild) {
-                        root.removeChild(root.firstChild);
-                    }
 
-                    root.insertAdjacentHTML('beforeend', '<div class="program">./pseudocode_fetcher ><div id="alg-input" class="input alg-input" contenteditable="true"></div></div>');
-                    document.getElementById('alg-input').focus();
-                    document.addEventListener('click', clickEventHandler);
-                    
-                    break;
-                case "C": //copy to clipboard
-
-                    break;
-                case "N": //next code fragment
-
-                    break;
-                default: //not a valid input error
-                    break;
+            if (input === "") {
+                appendToDom('<p class="error">Can\'t do anything with an empty query. Please try again...</p><p class="program">&#8594; Please enter an algorithm:</p><div class="tilde">~<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
+                
+                document.getElementById('key-input').focus();
+                return;
             }
+
+            input = input.toLowerCase();
+            if (input === "clear")  {
+                resetElement(root);
+            } 
+            else if (input === "copy") {
+                let pseudo = document.querySelector('.result-id').innerHTML;
+                copyToClipboard(pseudo);
+            }
+            else if (input === "next") { //next code fragment
+                let current_frag = document.querySelector('.result-id');
+                let current_frag_num = parseInt(current_frag.id);
+                current_frag.className = "result";
+
+                let current_pageid = document.querySelector('.current_id').id;
+                fetch(`http://localhost:8081/parse/${current_pageid}/${current_frag_num+1}`)
+                    .then(res => {
+                        handleStream(res, root);
+                    })
+                    .catch(err => {
+                        console.log(`Cannot access server: ${err}`);
+                    })
+            }
+            else if (input === "new") {
+                appendToDom('<p class="program">Please enter an algorithm:</p><div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>');
+                
+            
+                document.getElementById('alg-input').focus();
+                document.addEventListener('click', clickEventHandler);
+            } 
+            else {
+                appendToDom('<p class="error">Not a valid command. Please try again...</p><p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-fetcher<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
+            
+                document.getElementById('key-input').focus();
+                return;
+            }
+            
         }
     }
 }, false);
@@ -71,9 +107,13 @@ function clickEventHandler(ele) {
     if (ele.target.className === "result-link") {
         document.removeEventListener('click', clickEventHandler);
         
+        document.querySelector('.current_id').setAttribute('id', ele.target.id);
+
+        let streamed_res = '';
+
         fetch(`http://localhost:8081/parse/${ele.target.id}/0`)
             .then(res => {
-                handleStream(res, root);
+                handleStream(res, root, streamed_res);
             })
             .catch(err => {
                 console.log(`Cannot access server: ${err}`);
@@ -82,39 +122,121 @@ function clickEventHandler(ele) {
 }
 
 /**
- * Converts string into DOM Elements using the template tag (HTML5)
- * @param {String} html String representation of DOM elements
+ * Uses regex to make the copy readable then uses execCommand to copy to clipboard
+ * @param {String} html_string String containing html tags
  */
-function htmlToElements(html) {
+function copyToClipboard(html_string) {
+    html_string = html_string.replace(/<br>/gm, '\n');
+    html_string = html_string.replace(/<(?:.|\n)*?>/gm, '');
+
+    const tmp = document.createElement('textarea');
+    tmp.value = html_string;
+    tmp.setAttribute('readonly', '');
+    tmp.style.position = 'absolute';
+    tmp.style.left = '-9999px';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try {
+        let success = document.execCommand('copy');
+        if (success) {
+            appendToDom('<p class="program">Succesfully copied!</p>');
+        } else {
+            throw('oof');
+        }
+    } catch (err) {
+        appendToDom('<p class="error">Unable to copy the fragment!</p>');
+    }
+    document.body.removeChild(tmp);
+
+    appendToDom('<p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-fetcher<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
+
+    document.getElementById('key-input').focus();
+}
+
+/**
+ * Clears all elements and resets to first input field
+ * @param {Node} element_root Node which will be the root for the reset (all it's children)
+ */
+function resetElement(element_root) {
+    while(element_root.firstChild) {
+        root.removeChild(element_root.firstChild);
+    }
+
+    appendToDom('<p class="program">Please enter an algorithm:</p><div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>');
+
+    document.getElementById('alg-input').focus();
+    document.addEventListener('click', clickEventHandler);
+}
+
+/**
+ * Creates Nodes to add to DOM 
+ * @param {String} html_string String containing html tags
+ */
+function appendToDom(html_string) {
+    let elements = htmlToElements(html_string);
+    elements.forEach(element => {
+        root.appendChild(element);
+        element.scrollIntoView();
+    })
+}
+
+/**
+ * Converts string into DOM Elements using the template tag (HTML5)
+ * @param {String} html_string String representation of DOM elements
+ */
+function htmlToElements(html_string) {
     let template = document.createElement('template');
-    template.innerHTML = html;
+    template.innerHTML = html_string;
+    
     return Array.from(template.content.childNodes);
 }
 
 /**
- * 
+ * Handles the response stream of the backend, concatenating until a deliminator and then appends to #root div
  * @param {Response} response Response of fetch query
  * @param {HTMLElement} root Element to append all returned DOM Elements
+ * @param {String} stream Total non-deliminated response so far (cannot assume chunk size)
  */
-function handleStream(response, root) {
+function handleStream(response, root, stream) {
     var reader = response.body.getReader();
-    function read() {
+    async function read() {
         return reader.read().then(({value, done}) => {
-            if (done) {
+            if (done) { //stream has ended
                 return;
             }
 
             let string = new TextDecoder("utf-8").decode(value);
-            let elements = htmlToElements(string);
 
-            elements.forEach(child => {
-                root.appendChild(child);
-                child.scrollIntoView();
-                if (document.querySelector("#key-input")) {
-                    document.getElementById("key-input").focus();
-                }
-            })
+            if (!stream) stream = string;
+            else stream += string;
 
+            if (stream.match(/.+DEL$/gm)) {
+
+                let groups = stream.split("DEL");
+                groups.pop(); //delim on end gives empty array element'
+
+                stream = '';
+    
+                groups.forEach(group => {
+                    let elements = htmlToElements(group);
+
+                    elements.forEach(child => {
+                        root.appendChild(child);
+                        child.scrollIntoView();
+                        if (document.querySelector("#key-input")) {
+                            document.getElementById("key-input").focus();
+                        } 
+                        else if (document.querySelector("#err-input")) {
+                            document.getElementById("err-input").focus();
+                        }
+                        else if (document.querySelector("#alg-input")) {
+                            document.getElementById("alg-input").focus();
+                            document.addEventListener('click', clickEventHandler);
+                        }
+                    })
+                })
+                
+            }
             read();
         });
     };

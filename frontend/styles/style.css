@@ -2,7 +2,7 @@ html, body {
     width: 100%;
     height: 100%;
     margin: 0;
-    background-color: rgb(39, 61, 81);
+    background-color: #031122;
     overflow: hidden;
 }
 
@@ -75,12 +75,15 @@ span {
     background: transparent;
     border: none;
     color: transparent;
-    text-shadow: 0 0 0 #DD56E2;
+    text-shadow: 0 0 0 #FFF;
     font-size: 1rem;
 
     position: relative;
+    display: -moz-inline-stack;
     display: inline-block;
+    *display: inline;
     line-height: 1.5em;
+    _height: 1.5em;
 }
 
 .input:hover {
@@ -92,7 +95,9 @@ span {
     position: absolute;
     top: 0;
     right: -12px;
+    display: -moz-inline-stack;
     display: inline-block;
+    *display: inline;
     background-color: #DD56E2;
     vertical-align: top;
     width: 10px;
@@ -118,14 +123,25 @@ span {
 }
 
 .program {
+    color: #FF9F21;
+    padding-right: 0.5rem;
+    float: left;
+    clear: left;
+}
+
+.tilde {
     color: #00C8A5;
     padding-right: 0.5rem;
     float: left;
     clear: left;
 }
 
+.tilde br {
+    display: none;
+}
+
 .update {
-    color: #FF9F21;
+    color: #00C8A5;
     float: left;
     clear: left;
 }
@@ -143,7 +159,7 @@ span {
 }
 
 .result {
-    color: #DD56E2;
+    color: #FFF;
     float: left;
     clear: left;
 }
@@ -153,7 +169,7 @@ span {
 }
 
 .result-grid {
-    color: #DD56E2;
+    color: #5DA0DF;
     float: left;
     clear: left;
     display: grid;
@@ -203,9 +219,3 @@ span {
         line-height: 1.5em;
     }
 }
-
-/* @media screen and (min-width: 641px) and (max-width: 1007px) {
-    .title {
-        font-size: 100px;
-    }
-} */

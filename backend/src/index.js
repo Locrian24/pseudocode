@@ -17,30 +17,42 @@ app.use(morgan('combined'));
 /**
  * Initial search for pages
  */
-app.get('/:initialsearch', (req, res) => {
+app.get('/:initialsearch', (req, res, next) => {
     let search = req.params.initialsearch;
 
-    res.write(`<p class="update">Querying Wiki's API...</p>`);
+    res.write(`<p class="update">&#8594; Querying Wiki's API...</p>`);
+    res.write(`DEL`);
 
     axios
         .get(`https://en.wikipedia.org/w/api.php?action=query&origin=*&format=json&list=search&srprop&srsearch=${search}&srinfo=totalhits`)
         .then((response) => {
-            res.write(`<p class="program">Showing top 6 of ${response.data.query.searchinfo.totalhits} results:</p>`);
 
             let search_results = response.data.query.search;
+
+            if (search_results.length == 0) {
+                //No page of the name given exists
+                res.write(`<p class="error">&#8594; No page named ${search} exists! Restarting...</p>`);
+                res.write('<p class="program">&#8594; Please enter an algorithm:</p>');
+                res.write(`<div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>`);
+                res.status(404).end(`DEL`);
+                return next();
+            }
+
+            let bound = ((search_results.length < 6) ? search_results.length : 6 );
+
+            res.write(`<p class="program">&#8594; Choose your Wiki page from the top ${bound} of ${response.data.query.searchinfo.totalhits} hits:</p>`);
             res.write(`<div class="result-grid">`);
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < bound; i++) {
                 let pageid = search_results[i]["pageid"];
                 let page_title = search_results[i]["title"];
                 res.write(`<p class="result-link" id="${pageid}">${page_title}</p>`);
             }
             res.write(`</div>`);
-            res.write(`<p class="program">Click on the desired page...</p>`);
-            res.status(404).end();
+            res.status(200).end(`DEL`);
         })
         .catch((error) => {
-            res.write(`<p class="error">${error}</p>`);
-            res.status(500).end();
+            res.write(`<p class="error">&#8594; ${error}</p>`);
+            res.status(500).end(`DEL`);
         });
 });
 
@@ -51,13 +63,12 @@ app.get('/parse/:id/:fragnum', (req, res, next) => {
     let id = req.params.id;
     let frag_num = parseInt(req.params.fragnum);
 
-    res.write(`<p class="update">Fetching page content...</p>`);
+    res.write(`<p class="update">&#8594; Fetching page content...</p>`);
+    res.write(`DEL`);
 
     axios
         .get(`https://en.wikipedia.org/w/api.php?action=parse&format=json&origin=*&pageid=${id}&prop=displaytitle%7Ctext`)
         .then((response) => {
-
-            res.write(`<p class="update">Extracting pseudocode fragments...</p>`);
 
             //Extracting all <pre> groups from page html
             let html = response.data.parse.text;
@@ -65,9 +76,10 @@ app.get('/parse/:id/:fragnum', (req, res, next) => {
 
             if (!code_frags) {
                 //No <pre> tags found
-                res.write(`<p class="error">No pseudocode found for ${response.data.parse.displaytitle}! Press R to restart</p>`);
-                res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
-                res.status(404).end();
+                res.write(`<p class="error">&#8594; No pseudocode found for ${response.data.parse.displaytitle}! Restarting...</p>`);
+                res.write('<p class="program">&#8594; Please enter an algorithm:</p>');
+                res.write(`<div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>`);
+                res.status(404).end(`DEL`);
                 return next();
             }
 
@@ -76,29 +88,27 @@ app.get('/parse/:id/:fragnum', (req, res, next) => {
 
             if (!parsed_frag) {
                 //No more <pre> tags
-                //TODO Add better functionality than having to restart (go back to previous?)
-                res.write('<p class="error">Cannot find another fragment in the document. Please restart to try again (R)</p>');
-                res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
-                res.status(404).end();
+                res.write('<p class="error">&#8594; Cannot find another fragment in the document. Restarting...</p>');
+                res.write('<p class="program">&#8594; Please enter an algorithm:</p>');
+                res.write(`<div class="tilde">~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div></div>`);
+                res.status(404).end(`DEL`);
                 return next();
             }
 
             //<pre> section found and can now be returned through stream
+            //parsed_frag is the extracted pseudocode from the Wiki page
             parsed_frag = parsed_frag.replace(/\\n/g, '<br />');
 
-            res.write(`<p class="program">Fragment ${frag_num + 1} for ${response.data.parse.displaytitle}:</p>`);
-            res.write(`<div id="0" class="result">`);
-            res.write(parsed_frag);
-            res.write(`</div>`);
+            res.write(`<p class="program">&#8594; Fragment ${frag_num + 1} of ${code_frags.length} for ${response.data.parse.displaytitle}:</p>`);
+            res.write(`<div id="${frag_num}" class="result result-id">${parsed_frag}</div>`);
 
-            res.write(`<p class="program">(C = copy to clipboard, N = next fragment, R = restart)</p>`);
-            res.write(`<div class="program">./pseudocode_fetcher ><div id="key-input" class="input key-input" contenteditable="true"></div></div>`);
-
-            res.status(200).end();
+            res.write(`<p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p>`);
+            res.write(`<div class="tilde">~/pseudo-fetcher<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>`);
+            res.status(200).end(`DEL`);
         })
         .catch((error) => {
             res.write(`<p class="error">${error}</p>`);
-            res.status(500).end();
+            res.status(500).end(`DEL`);
         });
 });
 

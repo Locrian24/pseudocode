@@ -13,12 +13,14 @@
             <div class="container">
                 <div class="header">
                     <h1 class="title">PSEUDOCODE FETCHER</h1>
-                    <p class="subtitle">A simple web app that uses Wikipedia’s API to get pseudocode for quick reference</p>
+                    <p class="subtitle">Fetch the pseudocode for any algorithm on Wikipedia in Hyper Terminal fashion</p>
                 </div>
                 <div class="code_container">
+                    <div class="current_id" style="display: none" hidden></div>
                     <div id="root" class="console">
-                        <div class="program">
-                            ./pseudocode_fetcher ><div id="alg-input" class="input alg-input" contenteditable="true"></div>
+                        <p class="program">Please enter an algorithm:</p>
+                        <div class="tilde">
+                            ~<div id="alg-input" class="input alg-input" contenteditable="true"><wbr></div>
                         </div>
                     </div>
                 </div>
