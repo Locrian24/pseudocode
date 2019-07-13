@@ -75,7 +75,7 @@ window.addEventListener("keydown", (event) => {
                 current_frag.className = "result";
 
                 let current_pageid = document.querySelector('.current_id').id;
-                appendToDom(`<p class="update">&#8594; Fetching page content...</p>`);
+                appendToDom(`<p class="update">&#8594; Scraping page content...</p>`);
                 fetch(`https://backend.locrian24.now.sh/parse/${current_pageid}/${current_frag_num+1}`)
                     .then(res => {
                         handleStream(res, root);
@@ -92,7 +92,7 @@ window.addEventListener("keydown", (event) => {
                 document.addEventListener('click', clickEventHandler);
             } 
             else {
-                appendToDom('<p class="error">Not a valid command. Please try again...</p><p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-fetcher<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
+                appendToDom('<p class="error">Not a valid command. Please try again...</p><p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-scraper<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
             
                 document.getElementById('key-input').focus();
                 return;
@@ -116,7 +116,7 @@ function clickEventHandler(ele) {
 
         let streamed_res = '';
 
-        appendToDom(`<p class="update">&#8594; Fetching page content...</p>`);
+        appendToDom(`<p class="update">&#8594; Scraping page content...</p>`);
 
         fetch(`https://backend.locrian24.now.sh/parse/${ele.target.id}/0`)
             .then(res => {
@@ -155,7 +155,7 @@ function copyToClipboard(html_string) {
     }
     document.body.removeChild(tmp);
 
-    appendToDom('<p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-fetcher<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
+    appendToDom('<p class="comment">&#8594; Commands: <i>copy</i> = copy to clipboard, <i>next</i> = next fragment, <i>clear</i> = clear screen, <i>new</i> = new algorithm</p><div class="tilde">~/pseudo-scraper<div id="key-input" class="input key-input" contenteditable="true"><wbr></div></div>');
 
     document.getElementById('key-input').focus();
 }

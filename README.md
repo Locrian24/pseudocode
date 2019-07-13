@@ -1,5 +1,5 @@
-# Pseudocode Fetching App
+# Pseudocode Scraping App
 
-This is a basic application that queries the Wikipedia API for a specific page given by the user and extracts all pseudocode segments, displaying them one at a time (depending on which one the user is searching for).
+This is a basic application that queries the Wikipedia API for a specific page's HTML for the user and scrapes all pseudocode segments with a simple regex, displaying them one at a time (depending on which one the user is searching for).
 
-I wanted to learn Vanilla Javascript and DOM Manipulation more thoroughly and so not frameworks or libraries are used in the frontend side, with the backend being powered by Express.js
+I wanted to learn Vanilla Javascript and DOM Manipulation thoroughly through practice and so, no frameworks or libraries are used in the frontend side. The backend uses Express and is hosted on Now by Zeit.
