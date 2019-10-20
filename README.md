@@ -1,7 +1,12 @@
-# Pseudocode Scraping App
+# Wikipedia Pseudocode Scraping App
 
-Find the page at https://locrian24.github.io/pseudocode
+![Pseudocode Scraper](https://github.com/Locrian24/pseudocode/blob/master/Pseudocode.png)
 
-This is a basic application that queries the Wikipedia API for a specific page's HTML for the user and scrapes all pseudocode segments with a simple regex, displaying them one at a time (depending on which one the user is searching for).
+## Why
+This project was my first experience of Javascript/Node.js development besides implementation of UI-based features.
 
-I wanted to learn Vanilla Javascript and DOM Manipulation thoroughly through practice and so, no frameworks or libraries are used in the frontend side. The backend uses Express and is hosted on Now by Zeit.
+As a way to familiarise myself with Vanilla JS AJAX requests and handling, I thought it'd be a fun project to work with Wikipedia's (_subjectively_) well-documented API. Being in an Algorithm and Data Structures class at the time, this seemed like the perfect functionality for a beginner project.
+
+### How it works
+This is a basic application that queries the Wikipedia API for a specific page based on user input. Once the desired page is chosen the page's HTML is scraped by a simple `<pre>` tag regex finder for all pseudocode segments. Due to multiple code segments possibly being on a single page, the total number is listed with an option to get the next code fragment.
+
